@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PlacementApi.Dtos;
 using PlacementApi.Services;
 
 namespace PlacementApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class CompaniesController : ControllerBase
 {
@@ -27,6 +29,7 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CompanyDto>> Create(CreateCompanyRequest request, CancellationToken ct)
     {
         var created = await _companies.CreateAsync(request, ct);

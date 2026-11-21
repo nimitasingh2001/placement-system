@@ -6,6 +6,15 @@ namespace PlacementApi.Infrastructure;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
+    private static string TitleFor(int status) => status switch
+    {
+        400 => "Bad request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not found",
+        409 => "Conflict",
+        _ => "Error"
+    };
     private readonly ILogger<GlobalExceptionHandler> _logger;
 
     public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
@@ -40,6 +49,9 @@ public class GlobalExceptionHandler : IExceptionHandler
 
     private static (int Status, string Title, string Detail, int? Code) Map(Exception exception)
     {
+        if (exception is ApiException api)
+            return (api.StatusCode, TitleFor(api.StatusCode), api.Message, null);
+
         var sql = FindSqlException(exception);
         if (sql is null)
             return (500, "Server error", "Something went wrong on our side. Please try again later.", null);
