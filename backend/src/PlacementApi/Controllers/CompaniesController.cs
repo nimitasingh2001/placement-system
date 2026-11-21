@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PlacementApi.Data;
 using PlacementApi.Dtos;
+using PlacementApi.Services;
 
 namespace PlacementApi.Controllers;
 
@@ -9,35 +8,28 @@ namespace PlacementApi.Controllers;
 [Route("api/[controller]")]
 public class CompaniesController : ControllerBase
 {
-    private readonly PlacementDbContext _db;
+    private readonly ICompanyService _companies;
 
-    public CompaniesController(PlacementDbContext db)
+    public CompaniesController(ICompanyService companies)
     {
-        _db = db;
+        _companies = companies;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<CompanyDto>>> GetAll()
-    {
-        var companies = await _db.Companies
-            .AsNoTracking()
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.CompanyName)
-            .Select(c => new CompanyDto(c.CompanyId, c.CompanyName, c.Industry, c.Location, c.Website))
-            .ToListAsync();
-
-        return companies;
-    }
+    public async Task<ActionResult<List<CompanyDto>>> GetAll(CancellationToken ct)
+        => await _companies.GetAllAsync(ct);
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<CompanyDto>> GetById(int id)
+    public async Task<ActionResult<CompanyDto>> GetById(int id, CancellationToken ct)
     {
-        var company = await _db.Companies
-            .AsNoTracking()
-            .Where(c => c.CompanyId == id && c.IsActive)
-            .Select(c => new CompanyDto(c.CompanyId, c.CompanyName, c.Industry, c.Location, c.Website))
-            .FirstOrDefaultAsync();
-
+        var company = await _companies.GetByIdAsync(id, ct);
         return company is null ? NotFound() : company;
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<CompanyDto>> Create(CreateCompanyRequest request, CancellationToken ct)
+    {
+        var created = await _companies.CreateAsync(request, ct);
+        return CreatedAtAction(nameof(GetById), new { id = created.CompanyId }, created);
     }
 }
