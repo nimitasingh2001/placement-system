@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using PlacementApi.Auth;
 using PlacementApi.Dtos;
@@ -17,6 +18,7 @@ public class AuthController : ControllerBase
         _auth = auth;
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
     {
@@ -24,6 +26,7 @@ public class AuthController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, new { message = "Account created. You can now log in." });
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
         => await _auth.LoginAsync(request, ct);
