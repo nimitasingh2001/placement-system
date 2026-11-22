@@ -69,6 +69,13 @@ public class AuthService : IAuthService
         if (result == PasswordVerificationResult.Failed)
             throw new ApiException(401, "Invalid email or password.");
 
+        if (user.StudentId is not null)
+        {
+            var active = await _db.Students.AnyAsync(s => s.StudentId == user.StudentId && s.IsActive, ct);
+            if (!active)
+                throw new ApiException(403, "This student account is inactive.");
+        }
+
         var (token, expires) = _tokens.CreateToken(user);
         return new AuthResponse(token, expires, user.Role, user.StudentId);
     }

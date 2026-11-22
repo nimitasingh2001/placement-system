@@ -40,7 +40,8 @@ public class CompanyService : ICompanyService
             CompanyName = request.CompanyName.Trim(),
             Industry = request.Industry?.Trim(),
             Location = request.Location.Trim(),
-            Website = request.Website.Trim()
+            Website = request.Website.Trim(),
+            IsActive = true
         };
 
         _db.Companies.Add(company);
