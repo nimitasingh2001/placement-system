@@ -21,6 +21,7 @@ if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
         "dotnet user-secrets set \"Jwt:Key\" \"<long random text>\" --project src/PlacementApi");
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+Console.WriteLine("ENV: " + builder.Environment.EnvironmentName + " | CORS origins: [" + string.Join(", ", allowedOrigins) + "]");
 
 // ---------- services ----------
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
