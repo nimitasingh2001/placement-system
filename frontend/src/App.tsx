@@ -1,39 +1,41 @@
-import { useEffect, useState } from 'react';
-import { api, errorMessage } from './api/client';
+import { Navigate, Route, Routes } from 'react-router';
+import { useAuth } from './auth/context';
+import AppLayout from './components/AppLayout';
+import Placeholder from './components/Placeholder';
+import RequireRole from './components/RequireRole';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
-type Health = { status: string; database: string; time: string };
+// "/" sends each person to their own home screen
+function RoleHome() {
+  const { session } = useAuth();
+  if (!session) return <Navigate to="/login" replace />;
+  return <Navigate to={session.role === 'Admin' ? '/admin' : '/jobs'} replace />;
+}
 
 export default function App() {
-  const [health, setHealth] = useState<Health | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api<Health>('/api/health')
-      .then(setHealth)
-      .catch((e: unknown) => setError(errorMessage(e)));
-  }, []);
-
   return (
-    <div className="wrap">
-      <h1>Placement Hub</h1>
-      <p className="mu">Setting things up. Let's check that the app can talk to the server.</p>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/" element={<RoleHome />} />
 
-      <div className="card" style={{ marginTop: 22, maxWidth: 480 }}>
-        {!health && !error && <p>Checking the server…</p>}
-        {error && (
-          <p>
-            <span className="chip bad">Not connected</span> {error}
-          </p>
-        )}
-        {health && (
-          <>
-            <p>
-              <span className="chip ok">Connected</span> The server is {health.status.toLowerCase()}.
-            </p>
-            <p className="mu">Database: {health.database}</p>
-          </>
-        )}
-      </div>
-    </div>
+      <Route element={<RequireRole role="Student" />}>
+        <Route element={<AppLayout />}>
+          <Route path="jobs" element={<Placeholder title="Jobs for you" />} />
+          <Route path="applications" element={<Placeholder title="Where things stand" />} />
+          <Route path="profile" element={<Placeholder title="Your details" />} />
+        </Route>
+      </Route>
+
+      <Route element={<RequireRole role="Admin" />}>
+        <Route element={<AppLayout />}>
+          <Route path="admin" element={<Placeholder title="Overview" />} />
+          <Route path="admin/manage" element={<Placeholder title="Manage" />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<Placeholder title="We couldn't find that page" />} />
+    </Routes>
   );
 }
